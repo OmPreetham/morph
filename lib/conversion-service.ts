@@ -15,11 +15,208 @@ export type ConversionFormat =
   | "html"
   | "parquet"
   | "markdown"
+  | "morse"
 
 export interface ConversionResult {
   success: boolean
   result: string
   error?: string
+}
+
+// Update the Morse code map to be more comprehensive
+const morseCodeMap = {
+  // Letters
+  A: ".-",
+  B: "-...",
+  C: "-.-.",
+  D: "-..",
+  E: ".",
+  F: "..-.",
+  G: "--.",
+  H: "....",
+  I: "..",
+  J: ".---",
+  K: "-.-",
+  L: ".-..",
+  M: "--",
+  N: "-.",
+  O: "---",
+  P: ".--.",
+  Q: "--.-",
+  R: ".-.",
+  S: "...",
+  T: "-",
+  U: "..-",
+  V: "...-",
+  W: ".--",
+  X: "-..-",
+  Y: "-.--",
+  Z: "--..",
+
+  // Numbers
+  "0": "-----",
+  "1": ".----",
+  "2": "..---",
+  "3": "...--",
+  "4": "....-",
+  "5": ".....",
+  "6": "-....",
+  "7": "--...",
+  "8": "---..",
+  "9": "----.",
+
+  // Punctuation
+  ".": ".-.-.-",
+  ",": "--..--",
+  "?": "..--..",
+  "'": ".----.",
+  "!": "-.-.--",
+  "/": "-..-.",
+  "(": "-.--.",
+  ")": "-.--.-",
+  "&": ".-...",
+  ":": "---...",
+  ";": "-.-.-.",
+  "=": "-...-",
+  "+": ".-.-.",
+  "-": "-....-",
+  _: "..--.-",
+  '"': ".-..-.",
+  $: "...-..-",
+  "@": ".--.-.",
+
+  // Special characters
+  " ": "/", // Space is represented as a forward slash in Morse code
+
+  // Additional characters
+  Á: ".--.-",
+  Ä: ".-.-",
+  É: "..-..",
+  Ñ: "--.--",
+  Ö: "---.",
+  Ü: "..--",
+  "<": ".-..-",
+  ">": ".-..-",
+  "[": "-.--.",
+  "]": "-.--.-",
+  "{": "-.--.",
+  "}": "-.--.-",
+  "\\": "-..-.",
+  "|": "-..-.",
+  "^": "......",
+  "*": "-..-",
+  "#": "...-.-",
+  "%": "-..-.-",
+  "~": ".-.-.",
+  "`": ".----.",
+}
+
+// Reverse the Morse code map for decoding
+const reverseMorseCodeMap = Object.entries(morseCodeMap).reduce((acc, [char, code]) => {
+  acc[code] = char
+  return acc
+}, {})
+
+// Enhanced Morse code conversion functions
+
+// Function to convert text to Morse code with more options
+const textToMorse = (text: string, options: { wordSeparator?: string; charSeparator?: string } = {}): string => {
+  const { wordSeparator = " / ", charSeparator = " " } = options
+
+  return text
+    .toUpperCase()
+    .split(" ")
+    .map((word) =>
+      word
+        .split("")
+        .map((char) => morseCodeMap[char] || char)
+        .join(charSeparator),
+    )
+    .join(wordSeparator)
+}
+
+// Function to convert Morse code to text with more options
+const morseToText = (
+  morse: string,
+  options: { wordSeparator?: string | RegExp; charSeparator?: string | RegExp } = {},
+): string => {
+  const { wordSeparator = / \/ | \/ | \/\/\/ /, charSeparator = / / } = options
+
+  return morse
+    .split(wordSeparator)
+    .map((word) =>
+      word
+        .split(charSeparator)
+        .map((code) => reverseMorseCodeMap[code] || code)
+        .join(""),
+    )
+    .join(" ")
+}
+
+// Function to validate if a string is valid Morse code
+const isValidMorse = (morse: string): boolean => {
+  const validChars = new Set([".", "-", "/", " "])
+  return morse.split("").every((char) => validChars.has(char))
+}
+
+// Function to play Morse code audio
+const playMorseAudio = (
+  morse: string,
+  options: { dotDuration?: number; dashDuration?: number; pauseDuration?: number } = {},
+): void => {
+  if (typeof window === "undefined") return // Server-side check
+
+  const { dotDuration = 100, dashDuration = 300, pauseDuration = 100 } = options
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+
+  const playTone = (duration: number, time: number) => {
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+
+    oscillator.type = "sine"
+    oscillator.frequency.value = 700
+
+    oscillator.start(time)
+    oscillator.stop(time + duration / 1000)
+  }
+
+  let currentTime = audioContext.currentTime
+
+  morse.split("").forEach((char) => {
+    if (char === ".") {
+      playTone(dotDuration, currentTime)
+      currentTime += dotDuration / 1000
+    } else if (char === "-") {
+      playTone(dashDuration, currentTime)
+      currentTime += dashDuration / 1000
+    }
+
+    // Add pause after each character
+    if (char === "." || char === "-") {
+      currentTime += pauseDuration / 1000
+    } else if (char === " ") {
+      currentTime += (pauseDuration * 3) / 1000 // Longer pause between words
+    } else if (char === "/") {
+      currentTime += (pauseDuration * 7) / 1000 // Even longer pause for word separator
+    }
+  })
+}
+
+// Function to convert Morse code to binary
+const morseToBinary = (morse: string): string => {
+  return morse.replace(/\./g, "10").replace(/-/g, "1110").replace(/ /g, "00").replace(/\//g, "000000")
+}
+
+// Function to convert binary to Morse code
+const binaryToMorse = (binary: string): string => {
+  return binary
+    .replace(/1110/g, "-")
+    .replace(/10/g, ".")
+    .replace(/000000/g, "/")
+    .replace(/00/g, " ")
 }
 
 export const convertData = (
@@ -33,7 +230,86 @@ export const convertData = (
       let result = ""
       const format = `${sourceFormat}-to-${targetFormat}`
 
-      if (format === "json-to-xml") {
+      // Add Morse code conversion cases
+      if (format === "plaintext-to-morse") {
+        result = textToMorse(input)
+      } else if (format === "morse-to-plaintext") {
+        result = morseToText(input)
+      } else if (format === "morse-to-json") {
+        const text = morseToText(input)
+        try {
+          // Try to parse as JSON if it's valid JSON after conversion
+          const jsonObj = JSON.parse(text)
+          result = JSON.stringify(jsonObj, null, indentSize)
+        } catch {
+          // If not valid JSON, wrap as a JSON string
+          result = JSON.stringify({ text }, null, indentSize)
+        }
+      } else if (format === "json-to-morse") {
+        // Convert JSON to string and then to Morse
+        result = textToMorse(JSON.stringify(JSON.parse(input), null, 0))
+      } else if (targetFormat === "morse") {
+        // For other formats to Morse, convert to string first
+        let textContent = input
+
+        if (sourceFormat === "xml" || sourceFormat === "yaml" || sourceFormat === "csv" || sourceFormat === "tsv") {
+          textContent = input
+        }
+
+        result = textToMorse(textContent)
+      } else if (sourceFormat === "morse" && targetFormat !== "plaintext" && targetFormat !== "json") {
+        // For Morse to other formats, convert to text first
+        const text = morseToText(input)
+        throw new Error(
+          `Direct conversion from Morse code to ${targetFormat} is not supported. Convert to Plain Text first.`,
+        )
+      } else if (format === "morse-to-xml") {
+        const text = morseToText(input)
+        try {
+          // Try to parse as XML if it's valid XML after conversion
+          parseString(text, (err, parsedResult) => {
+            if (err) throw err
+            const builder = new Builder({
+              headless: true,
+              renderOpts: { pretty: true, indent: " ".repeat(indentSize) },
+            })
+            result = builder.buildObject(parsedResult)
+          })
+        } catch {
+          // If not valid XML, wrap as a simple XML document
+          result = `<?xml version="1.0" encoding="UTF-8"?>\n<root>\n${" ".repeat(indentSize)}<text>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</text>\n</root>`
+        }
+      } else if (format === "morse-to-yaml") {
+        const text = morseToText(input)
+        try {
+          // Try to parse as YAML if it's valid YAML after conversion
+          const yamlObj = YAML.parse(text)
+          result = YAML.stringify(yamlObj, { indent: indentSize })
+        } catch {
+          // If not valid YAML, wrap as a simple YAML document
+          result = `text: "${text.replace(/"/g, '\\"')}"`
+        }
+      } else if (format === "morse-to-csv") {
+        const text = morseToText(input)
+        // Simple conversion to single-cell CSV
+        result = `"text"\n"${text.replace(/"/g, '""')}"`
+      } else if (format === "morse-to-tsv") {
+        const text = morseToText(input)
+        // Simple conversion to single-cell TSV
+        result = `text\n${text}`
+      } else if (format === "morse-to-sql") {
+        const text = morseToText(input)
+        // Create a simple SQL statement
+        result = `CREATE TABLE morse_data (\n  text VARCHAR(255)\n);\n\nINSERT INTO morse_data (text) VALUES ('${text.replace(/'/g, "''")}');`
+      } else if (format === "morse-to-html") {
+        const text = morseToText(input)
+        // Create a simple HTML document
+        result = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <title>Morse Code Conversion</title>\n</head>\n<body>\n  <h1>Decoded Morse Code</h1>\n  <p>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>\n</body>\n</html>`
+      } else if (format === "morse-to-markdown") {
+        const text = morseToText(input)
+        // Create a simple Markdown document
+        result = `# Decoded Morse Code\n\n${text}`
+      } else if (format === "json-to-xml") {
         const jsonObj = JSON.parse(input)
         const builder = new Builder({
           headless: true,
@@ -416,7 +692,6 @@ export const convertData = (
 
           html += renderObject(jsonObj)
           html += "</div>\n</body>\n</html>"
-          result = html
         } else {
           throw new Error("JSON must not be an empty array for HTML conversion")
         }
@@ -622,6 +897,8 @@ export const sourceFormats = [
   { value: "yaml", label: "YAML" },
   { value: "csv", label: "CSV" },
   { value: "tsv", label: "TSV" },
+  { value: "plaintext", label: "PLAIN TEXT" },
+  { value: "morse", label: "MORSE CODE" },
 ]
 
 // Target format mapping
@@ -637,9 +914,16 @@ export const targetFormatMap = {
     { value: "excel", label: "EXCEL" },
     { value: "plaintext", label: "PLAIN TEXT" },
     { value: "html", label: "HTML" },
+    { value: "morse", label: "MORSE CODE" },
   ],
-  xml: [{ value: "json", label: "JSON" }],
-  yaml: [{ value: "json", label: "JSON" }],
+  xml: [
+    { value: "json", label: "JSON" },
+    { value: "morse", label: "MORSE CODE" },
+  ],
+  yaml: [
+    { value: "json", label: "JSON" },
+    { value: "morse", label: "MORSE CODE" },
+  ],
   csv: [
     { value: "json", label: "JSON" },
     { value: "xml", label: "XML" },
@@ -650,7 +934,53 @@ export const targetFormatMap = {
     { value: "avro", label: "AVRO" },
     { value: "protobuf", label: "PROTOBUF" },
     { value: "markdown", label: "MARKDOWN" },
+    { value: "morse", label: "MORSE CODE" },
   ],
-  tsv: [{ value: "json", label: "JSON" }],
+  tsv: [
+    { value: "json", label: "JSON" },
+    { value: "morse", label: "MORSE CODE" },
+  ],
+  plaintext: [{ value: "morse", label: "MORSE CODE" }],
+  morse: [
+    { value: "plaintext", label: "PLAIN TEXT" },
+    { value: "json", label: "JSON" },
+    { value: "xml", label: "XML" },
+    { value: "yaml", label: "YAML" },
+    { value: "csv", label: "CSV" },
+    { value: "tsv", label: "TSV" },
+    { value: "sql", label: "SQL" },
+    { value: "html", label: "HTML" },
+    { value: "markdown", label: "MARKDOWN" },
+  ],
+}
+
+// Update the outputs state to include morse
+export const outputs = {
+  json: "",
+  xml: "",
+  yaml: "",
+  csv: "",
+  tsv: "",
+  sql: "",
+  protobuf: "",
+  avro: "",
+  excel: "",
+  plaintext: "",
+  html: "",
+  parquet: "",
+  markdown: "",
+  morse: "",
+}
+
+// Add these functions to the export section at the end of the file
+export {
+  textToMorse,
+  morseToText,
+  isValidMorse,
+  playMorseAudio,
+  morseToBinary,
+  binaryToMorse,
+  morseCodeMap,
+  reverseMorseCodeMap,
 }
 

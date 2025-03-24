@@ -19,6 +19,7 @@ import {
 import { useTheme } from "next-themes"
 import { useRef, useState, useEffect } from "react"
 
+// Add onWrapLinesChange to the interface
 interface OutputPanelProps {
   outputs: Record<ConversionFormat, string>
   activeTargetFormat: ConversionFormat
@@ -31,8 +32,10 @@ interface OutputPanelProps {
   onCopy: (format: ConversionFormat) => void
   onDownload: (format?: ConversionFormat) => void
   onTabChange: (format: ConversionFormat) => void
+  onWrapLinesChange: (value: boolean) => void
 }
 
+// Add onWrapLinesChange to the destructured props
 export function OutputPanel({
   outputs,
   activeTargetFormat,
@@ -45,6 +48,7 @@ export function OutputPanel({
   onCopy,
   onDownload,
   onTabChange,
+  onWrapLinesChange,
 }: OutputPanelProps) {
   const { resolvedTheme } = useTheme()
   const tabsListRef = useRef<HTMLDivElement>(null)
@@ -105,6 +109,8 @@ export function OutputPanel({
         return "text"
       case "markdown":
         return "markdown"
+      case "morse":
+        return "text"
       default:
         return "text"
     }
@@ -145,6 +151,57 @@ export function OutputPanel({
         <div className="flex justify-between items-center mb-2">
           <Label className="uppercase font-bold">OUTPUT</Label>
           <div className="flex gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => onWrapLinesChange(!wrapLines)}>
+                  {wrapLines ? (
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4 mr-2"
+                      >
+                        <polyline points="3 7 9 7 9 13 3 13 3 7"></polyline>
+                        <polyline points="21 7 15 7 15 13 21 13 21 7"></polyline>
+                        <line x1="9" y1="10" x2="15" y2="10"></line>
+                      </svg>
+                      <span className="hidden sm:inline-block uppercase">UNWRAP</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4 mr-2"
+                      >
+                        <polyline points="3 7 9 7 9 13 3 13 3 7"></polyline>
+                        <polyline points="21 7 15 7 15 13 21 13 21 7"></polyline>
+                        <line x1="9" y1="10" x2="15" y2="10"></line>
+                      </svg>
+                      <span className="hidden sm:inline-block uppercase">WRAP</span>
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="uppercase">{wrapLines ? "DISABLE LINE WRAPPING" : "ENABLE LINE WRAPPING"}</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -240,7 +297,7 @@ export function OutputPanel({
         </div>
 
         <ScrollArea className="flex-1 border rounded-none" type="scroll" scrollHideDelay={0}>
-          <div className="min-w-full">
+          <div className={wrapLines ? "w-full" : "min-w-full"}>
             {currentOutput ? (
               <SyntaxHighlighter
                 language={getSyntaxLanguage(activeTargetFormat)}
@@ -249,12 +306,20 @@ export function OutputPanel({
                   margin: 0,
                   borderRadius: 0,
                   minHeight: "100%",
+                  backgroundColor: getOutputBackground(),
                   fontSize: window.innerWidth < 768 ? `${fontSize - 2}px` : `${fontSize}px`,
                   whiteSpace: wrapLines ? "pre-wrap" : "pre",
-                  backgroundColor: getOutputBackground(),
-                  overflowX: "auto",
+                  wordBreak: wrapLines ? "break-word" : "normal",
+                  overflowX: wrapLines ? "hidden" : "auto",
                 }}
                 wrapLines={wrapLines}
+                wrapLongLines={wrapLines}
+                codeTagProps={{
+                  style: {
+                    whiteSpace: wrapLines ? "pre-wrap" : "pre",
+                    wordBreak: wrapLines ? "break-word" : "normal",
+                  },
+                }}
               >
                 {getFormattedOutput(currentOutput)}
               </SyntaxHighlighter>

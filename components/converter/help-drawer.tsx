@@ -134,6 +134,14 @@ export function HelpDrawer({ open, onOpenChange, version }: HelpDrawerProps) {
                       line is a data record.
                     </p>
                   </div>
+                  <div className="border p-3 rounded-sm">
+                    <h4 className="font-medium mb-1">Morse Code</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground">International Telegraph Code</p>
+                    <p className="text-xs mt-2">
+                      A method of encoding text characters as standardized sequences of dots and dashes, used
+                      historically for telegraph communication.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -170,6 +178,21 @@ export function HelpDrawer({ open, onOpenChange, version }: HelpDrawerProps) {
                         <td className="py-2">CSV</td>
                         <td className="py-2">JSON</td>
                         <td className="py-2">Converts to array of objects</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Plaintext</td>
+                        <td className="py-2">Morse</td>
+                        <td className="py-2">Character-by-character conversion</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Morse</td>
+                        <td className="py-2">Plaintext</td>
+                        <td className="py-2">Decodes Morse to readable text</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">JSON/XML/YAML</td>
+                        <td className="py-2">Morse</td>
+                        <td className="py-2">Converts to string first</td>
                       </tr>
                     </tbody>
                   </table>

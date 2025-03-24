@@ -45,6 +45,7 @@ export default function DataConverter({
     html: "",
     parquet: "",
     markdown: "",
+    morse: "",
   })
   const [sourceFormat, setSourceFormat] = useState<ConversionFormat>("json")
   const [targetFormats, setTargetFormats] = useState<ConversionFormat[]>(["xml"])
@@ -57,7 +58,8 @@ export default function DataConverter({
   const { theme = "system", setTheme } = useTheme()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
-  const [wrapLines, setWrapLines] = useState(false)
+  // Update the wrapLines state to be true by default
+  const [wrapLines, setWrapLines] = useState(true)
   const [preserveCase, setPreserveCase] = useState(true)
   const [syntaxTheme, setSyntaxTheme] = useState("auto")
   const [helpOpen, setHelpOpen] = useState(false)
@@ -173,6 +175,7 @@ export default function DataConverter({
         html: "",
         parquet: "",
         markdown: "",
+        morse: "",
       })
 
       toast({
@@ -211,6 +214,7 @@ export default function DataConverter({
         html: "",
         parquet: "",
         markdown: "",
+        morse: "",
       },
       ...item.outputs,
     })
@@ -331,6 +335,7 @@ export default function DataConverter({
         html: "",
         parquet: "",
         markdown: "",
+        morse: "",
       })
       setIsProcessing(false)
       setProgress(0)
@@ -444,6 +449,7 @@ export default function DataConverter({
       html: "",
       parquet: "",
       markdown: "",
+      morse: "",
     })
     toast({
       title: "FIELDS CLEARED",
@@ -584,6 +590,7 @@ export default function DataConverter({
                   onCopy={copyToClipboard}
                   onDownload={downloadOutput}
                   onTabChange={handleTabChange}
+                  onWrapLinesChange={setWrapLines}
                 />
               </div>
             </div>
