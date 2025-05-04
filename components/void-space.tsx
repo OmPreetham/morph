@@ -125,4 +125,3 @@ linear-gradient(90deg, ${isDark ? "rgba(128, 128, 128, 0.1)" : "rgba(200, 200, 2
     </div>
   )
 }
-

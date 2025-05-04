@@ -21,6 +21,28 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/jpeg",
       },
     ],
+    orientation: "any",
+    categories: ["utilities", "productivity", "developer tools"],
+    shortcuts: [
+      {
+        name: "Morse Tools",
+        url: "/morse-tools",
+        description: "Morse code translator and tools",
+      },
+    ],
+    screenshots: [
+      {
+        src: "/logo.jpg",
+        sizes: "1280x720",
+        type: "image/jpeg",
+        form_factor: "wide",
+      },
+    ],
+    id: "morph-wrap-station",
+    dir: "ltr",
+    lang: "en",
+    prefer_related_applications: false,
+    scope: "/",
+    update_via_cache: "none",
   }
 }
-

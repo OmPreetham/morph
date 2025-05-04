@@ -172,4 +172,3 @@ export function InputPanel({
     </div>
   )
 }
-

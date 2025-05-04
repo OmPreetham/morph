@@ -1,15 +1,10 @@
 "use client"
 
+import { DrawerFooter } from "@/components/ui/drawer"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Info, Github, Globe, Download, Coffee } from "lucide-react"
@@ -305,6 +300,14 @@ export function HelpDrawer({ open, onOpenChange, version }: HelpDrawerProps) {
                 </div>
                 <p className="text-xs sm:text-sm text-center text-muted-foreground mt-2">MORPH PWA Icon</p>
               </div>
+
+              <div>
+                <h3 className="text-base md:text-lg font-medium mb-2">Automatic Updates</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  MORPH automatically checks for updates every hour to ensure you always have the latest features and
+                  improvements. Updates are applied automatically when you reload the app.
+                </p>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
@@ -316,4 +319,3 @@ export function HelpDrawer({ open, onOpenChange, version }: HelpDrawerProps) {
     </Drawer>
   )
 }
-

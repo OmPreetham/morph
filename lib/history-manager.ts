@@ -35,4 +35,3 @@ export const deleteHistoryItem = (history: HistoryItem[], id: string): HistoryIt
 export const clearHistory = (): HistoryItem[] => {
   return []
 }
-

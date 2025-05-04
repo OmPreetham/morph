@@ -21,6 +21,10 @@ import { HistoryDrawer } from "./converter/history-drawer"
 import JSZip from "jszip"
 import FileSaver from "file-saver"
 
+// Add useEffect to load history from localStorage on component mount
+// and update localStorage whenever history changes
+// Add this after the existing imports
+
 // Update the VERSION constant to reflect the new branding
 const VERSION = "1.2.0"
 
@@ -67,9 +71,22 @@ export default function DataConverter({
   const isMobile = useMediaQuery("(max-width: 768px)")
   const isTablet = useMediaQuery("(max-width: 1024px)")
   const containerRef = useRef(null)
-
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [history, setHistory] = useState<HistoryItem[]>([])
+
+  // Update the history state initialization to load from localStorage if available
+  // Replace the existing history state declaration:
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedHistory = localStorage.getItem("morph_conversion_history")
+        return savedHistory ? JSON.parse(savedHistory) : []
+      } catch (error) {
+        console.error("Failed to load history from localStorage:", error)
+        return []
+      }
+    }
+    return []
+  })
 
   // Resize state
   const [containerSize, setContainerSize] = useState({ width: "90%", height: "80vh" })
@@ -238,9 +255,16 @@ export default function DataConverter({
     })
   }
 
+  // Update the handleClearAllHistory function to also clear localStorage
   const handleClearAllHistory = () => {
     setHistory(clearHistory())
-
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("morph_conversion_history")
+      } catch (error) {
+        console.error("Failed to clear history from localStorage:", error)
+      }
+    }
     toast({
       title: "HISTORY CLEARED",
       variant: "default",
@@ -509,6 +533,23 @@ export default function DataConverter({
     return () => window.removeEventListener("resize", handleResize)
   }, [fontSize])
 
+  // Add this effect after the other useEffect hooks to save history to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && history.length > 0) {
+      try {
+        localStorage.setItem("morph_conversion_history", JSON.stringify(history))
+      } catch (error) {
+        console.error("Failed to save history to localStorage:", error)
+        // Optionally show a toast notification about the failure
+        toast({
+          title: "Failed to save history",
+          description: "Your conversion history couldn't be saved to local storage.",
+          variant: "destructive",
+        })
+      }
+    }
+  }, [history])
+
   return (
     <TooltipProvider>
       <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
@@ -655,4 +696,3 @@ export default function DataConverter({
     </TooltipProvider>
   )
 }
-

@@ -113,6 +113,32 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* Add PWA update check functionality */}
+        {/* Add this script to the head section, right after the theme color script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // PWA update checker
+              if ('serviceWorker' in navigator) {
+                // Register service worker
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Set up hourly update check
+                    setInterval(function() {
+                      registration.update();
+                      console.log('Checking for PWA updates...');
+                    }, 3600000); // 3600000 ms = 1 hour
+                    
+                  }).catch(function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className={`${inter.className} transition-colors duration-300`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -122,7 +148,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
-
-import './globals.css'
